@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Depracated in Android 13 (https://pub.dev/packages/permission_handler#faq) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    
+    <!-- Only works for devices with Android 13 or above (https://developer.android.com/about/versions/13/behavior-changes-13#granular-media-permissions) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/> -->
+    
     <application
         android:label="music_pedometer_prototype"
         android:name="${applicationName}"

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:sensors/sensors.dart';
-// import 'package:audioplayers/audioplayers.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 void main() {
   runApp(PedometerApp());
@@ -16,7 +18,7 @@ class PedometerApp extends StatelessWidget {
     return MaterialApp(
       title: 'Pedometer Music Sync',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
       ),
       home: PedometerHomePage(),
     );
@@ -30,7 +32,6 @@ class PedometerHomePage extends StatefulWidget {
 
 class _PedometerHomePageState extends State<PedometerHomePage> {
   AudioPlayer _audioPlayer = AudioPlayer();
-  // AudioCache _audioCache = AudioCache();
   int _stepCount = 0;
   double _stepInterval = 0;
   List<FlSpot> _accData = [];
@@ -77,6 +78,46 @@ class _PedometerHomePageState extends State<PedometerHomePage> {
         _versionNumber = value;
       });
     });
+  }
+
+  // Thanks https://stackoverflow.com/a/76736046/13122341
+  Future<void> _requestPermissions() async {
+    // await Permission.audio.request();
+    // await Permission.storage.request();
+    
+    final plugin = DeviceInfoPlugin();
+    final android = await plugin.androidInfo;
+
+    final storageStatus = android.version.sdkInt < 33
+        ? await Permission.storage.request() // await Permission.audio.request();
+        : PermissionStatus.granted;
+
+    if (storageStatus == PermissionStatus.granted) {
+      print("granted");
+    }
+    if (storageStatus == PermissionStatus.denied) {
+      print("denied");
+    }
+    if (storageStatus == PermissionStatus.permanentlyDenied) {
+      openAppSettings();
+    }
+  }
+
+  Future<void> _loadMusic() async {
+    // Pick an audio file
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['mp3', 'wav', 'ogg', 'aac'],
+    );
+
+    if (result != null) {
+      String? filePath = result.files.single.path;
+      if (filePath != null) {
+        // Set the audio player to use the selected file
+        await _audioPlayer.setFilePath(filePath);
+      }
+    }
   }
 
   void _detectStep(AccelerometerEvent event) {
@@ -383,12 +424,6 @@ class _PedometerHomePageState extends State<PedometerHomePage> {
               IconButton(icon: Icon(Icons.pause), onPressed: _pauseMusic, color: Colors.black, iconSize: 40),
               IconButton(icon: Icon(Icons.stop), onPressed: _stopMusic, color: Colors.black, iconSize: 40),
               IconButton(icon: Icon(Icons.refresh), onPressed: _resetStepCount, color: Colors.black, iconSize: 40),
-              // or
-              // ElevatedButton(onPressed: _playMusic, child: Text('Play')),
-              // ElevatedButton(onPressed: _pauseMusic, child: Text('Pause')),
-              // ElevatedButton(onPressed: _stopMusic, child: Text('Stop')),
-              // ElevatedButton(onPressed: _resetStepCount, child: Text('Reset')),
-              // ElevatedButton(onPressed: _loadMusic, child: Text('Load Music')),
             ],
           ),
 
@@ -410,10 +445,10 @@ class _PedometerHomePageState extends State<PedometerHomePage> {
           Text('Playback Mode: $_playbackMode'),
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _loadMusic,
-      //   child: Icon(Icons.add),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _loadMusic,
+        child: Icon(Icons.add),
+      ),
     );
   }
 }
