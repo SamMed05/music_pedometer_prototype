@@ -1,6 +1,6 @@
 # Music Pedometer Prototype
 
-A simple Flutter app prototype to synchronize music to steps.
+A simple Flutter pedometer app prototype to synchronize the music rhythm to your steps.
 
 ## License
 
